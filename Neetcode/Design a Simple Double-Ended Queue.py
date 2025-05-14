@@ -79,7 +79,7 @@ class Deque:
         Delete an item from the front of the deque.
         Returns True if successful, False if the deque was empty.
         """
-        if self.head == None:
+        if self.head = None:
             return False
         elif self.head == self.tail:
             self.head = self.tail = None
