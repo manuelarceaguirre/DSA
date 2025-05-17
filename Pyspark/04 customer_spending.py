@@ -20,16 +20,14 @@ Use PySpark DataFrame API (not Spark SQL).
 """
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.getOrCreate()
-from pyspark.sql import functions as F
+from pyspark.sql import functions as F 
+
 path = ""
 transactions_df = spark.read.format("delta").load(path)
-transactions_df = transactions_df.filter(F.col("total_amount") >= 20)
+transactions_filtered = transactions_df.filter(F.col("total_amount") >= 20)
 
-agg_df = transactions_df.groupBy("customer_id").agg(
-        F.count("transaction_id").alias("num_transactions"),
+transactions_agg = transactions_filtered.groupBy("customer_id").agg(
+        F.count("transaction_id").alias("total_transaction"),
         F.sum("total_amount").alias("total_spend"),
-        F.max("purchase_date_ts").alias("most_recent_purchase")
-        )
-
-
-
+        F.max("purchase_date_ts").alias("most_recent")
+)
