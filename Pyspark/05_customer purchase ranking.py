@@ -19,37 +19,29 @@ total_amount
 transaction_rank (1 = most recent)
 running_total_amount
 """
-from pyspark import SparkSession
+from pyspark.sql import SparkSession
 spark = SparkSession.builder.getOrCreate()
+from pyspark.sql import functions as F 
 from pyspark.sql import Window
-from pyspark.sql import functions as F
-
 path = ""
 transactions_df = spark.read.format("delta").load(path)
+window_rank = Window.partitionBy("customer_id").orderBy("purchase_date_ts")
 
-rank_window = Window.partitionBy("customer_id").orderBy("purchase_date_ts")
 transactions_df = transactions_df.withColumn(
         "ranking",
-        F.row_number().over(rank_window)
+        F.row_number().over(window_rank)
         )
-running_window = Window.partitionBy("customer_id").orderBy("purchase_date_ts").rowsBetween(Window.unboundedPreceding, Window.currentRow)
+window_amount = Window.partitionBy("customer_id").orderBy("purchase_date_ts").rowsBetween(Window.unboundedPreceding, Window.currentRow)
+
 transactions_df = transactions_df.withColumn(
-        "running_total",
-        F.sum("total_amount").over(running_window)
+        "total_running",
+        F.sum("total_amount").over(window_amount)
         )
-result = transactions_df.select(
+transactions_df.select(
 "customer_id",
 "transaction_id",
 "purchase_date_ts",
 "total_amount",
 "ranking",
-"running_total"
+"total_running"
         )
-"""
-Position your cursor at the beginning of "customer_id"
-Press qa to start recording a macro in register 'a'
-Type I"<Esc> to insert a double quote at the beginning of the line
-Type A",<Esc> to append a double quote and comma at the end of the line
-Type j to move down to the next line
-Press q to stop recording
-"""
